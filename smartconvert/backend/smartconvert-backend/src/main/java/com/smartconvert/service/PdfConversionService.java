@@ -1,5 +1,10 @@
 package com.smartconvert.service;
 
+import com.lowagie.text.Document;
+import com.lowagie.text.Font;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.pdf.BaseFont;
+import com.lowagie.text.pdf.PdfWriter;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.slf4j.Logger;
@@ -10,6 +15,8 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
+import static com.lowagie.text.Font.*;
 
 @Service
 public class PdfConversionService {
@@ -124,14 +131,20 @@ public class PdfConversionService {
      * Creates a simple PDF with formatted content
      */
     public void markdownToPdf(String markdown, Path outputPath) throws IOException {
-        // For now, create a simple text-based PDF
-        // A more sophisticated implementation would use OpenPDF or iText for rich formatting
+        Document document = new Document();
         
-        try (com.lowagie.text.Document document = new com.lowagie.text.Document()) {
-            com.lowagie.text.pdf.PdfWriter.getInstance(document, 
-                new FileOutputStream(outputPath.toFile()));
-            
+        try {
+            PdfWriter.getInstance(document, new FileOutputStream(outputPath.toFile()));
             document.open();
+            
+            Font heading1Font = new Font(HELVETICA, 18, BOLD);
+            Font heading2Font = new Font(HELVETICA, 16, BOLD);
+            Font heading3Font = new Font(HELVETICA, 14, BOLD);
+            Font heading4Font = new Font(HELVETICA, 12, BOLD);
+            Font heading5Font = new Font(HELVETICA, 11, BOLD);
+            Font heading6Font = new Font(HELVETICA, 10, BOLD);
+            Font normalFont = new Font(HELVETICA, 12, NORMAL);
+            Font listFont = new Font(HELVETICA, 12, NORMAL);
             
             String[] lines = markdown.split("\\n");
             
@@ -139,71 +152,43 @@ public class PdfConversionService {
                 line = line.trim();
                 
                 if (line.isEmpty()) {
-                    document.add(new com.lowagie.text.Paragraph(" "));
+                    document.add(new Paragraph(" "));
                     continue;
                 }
                 
                 // Handle headings
                 if (line.startsWith("###### ")) {
-                    com.lowagie.text.Paragraph p = new com.lowagie.text.Paragraph(
-                        line.substring(7), 
-                        new com.lowagie.text.Font(com.lowagie.text.Font.FontFamily.HELVETICA, 10, com.lowagie.text.Font.BOLD)
-                    );
-                    document.add(p);
+                    document.add(new Paragraph(line.substring(7), heading6Font));
                 } else if (line.startsWith("##### ")) {
-                    com.lowagie.text.Paragraph p = new com.lowagie.text.Paragraph(
-                        line.substring(6), 
-                        new com.lowagie.text.Font(com.lowagie.text.Font.FontFamily.HELVETICA, 11, com.lowagie.text.Font.BOLD)
-                    );
-                    document.add(p);
+                    document.add(new Paragraph(line.substring(6), heading5Font));
                 } else if (line.startsWith("#### ")) {
-                    com.lowagie.text.Paragraph p = new com.lowagie.text.Paragraph(
-                        line.substring(5), 
-                        new com.lowagie.text.Font(com.lowagie.text.Font.FontFamily.HELVETICA, 12, com.lowagie.text.Font.BOLD)
-                    );
-                    document.add(p);
+                    document.add(new Paragraph(line.substring(5), heading4Font));
                 } else if (line.startsWith("### ")) {
-                    com.lowagie.text.Paragraph p = new com.lowagie.text.Paragraph(
-                        line.substring(4), 
-                        new com.lowagie.text.Font(com.lowagie.text.Font.FontFamily.HELVETICA, 14, com.lowagie.text.Font.BOLD)
-                    );
-                    document.add(p);
+                    document.add(new Paragraph(line.substring(4), heading3Font));
                 } else if (line.startsWith("## ")) {
-                    com.lowagie.text.Paragraph p = new com.lowagie.text.Paragraph(
-                        line.substring(3), 
-                        new com.lowagie.text.Font(com.lowagie.text.Font.FontFamily.HELVETICA, 16, com.lowagie.text.Font.BOLD)
-                    );
-                    document.add(p);
+                    document.add(new Paragraph(line.substring(3), heading2Font));
                 } else if (line.startsWith("# ")) {
-                    com.lowagie.text.Paragraph p = new com.lowagie.text.Paragraph(
-                        line.substring(2), 
-                        new com.lowagie.text.Font(com.lowagie.text.Font.FontFamily.HELVETICA, 18, com.lowagie.text.Font.BOLD)
-                    );
-                    document.add(p);
+                    document.add(new Paragraph(line.substring(2), heading1Font));
                 } else if (line.startsWith("- ") || line.startsWith("* ")) {
-                    com.lowagie.text.Paragraph p = new com.lowagie.text.Paragraph(
-                        "• " + line.substring(2), 
-                        new com.lowagie.text.Font(com.lowagie.text.Font.FontFamily.HELVETICA, 12)
-                    );
+                    Paragraph p = new Paragraph("• " + line.substring(2), listFont);
                     p.setIndentationLeft(20);
                     document.add(p);
                 } else if (line.startsWith("---")) {
-                    document.add(new com.lowagie.text.Paragraph("─".repeat(50)));
+                    document.add(new Paragraph("─".repeat(50)));
                 } else {
                     // Regular paragraph - strip markdown formatting
                     String cleanText = stripMarkdownFormatting(line);
-                    com.lowagie.text.Paragraph p = new com.lowagie.text.Paragraph(
-                        cleanText, 
-                        new com.lowagie.text.Font(com.lowagie.text.Font.FontFamily.HELVETICA, 12)
-                    );
-                    document.add(p);
+                    document.add(new Paragraph(cleanText, normalFont));
                 }
             }
             
-            document.close();
         } catch (Exception e) {
             logger.error("Error creating PDF", e);
             throw new IOException("Failed to create PDF: " + e.getMessage(), e);
+        } finally {
+            if (document.isOpen()) {
+                document.close();
+            }
         }
     }
     
