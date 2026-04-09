@@ -3,6 +3,12 @@ package com.smartconvert.controller;
 import com.smartconvert.dto.ConvertRequest;
 import com.smartconvert.dto.ConvertResponse;
 import com.smartconvert.service.ConversionService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +27,7 @@ import java.nio.file.Path;
 @RestController
 @RequestMapping("/api")
 @CrossOrigin(origins = "*")
+@Tag(name = "Document Conversion", description = "APIs for converting documents between different formats")
 public class ConvertController {
     
     private static final Logger logger = LoggerFactory.getLogger(ConvertController.class);
@@ -29,10 +36,13 @@ public class ConvertController {
     private ConversionService conversionService;
     
     @PostMapping(value = "/convert", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Convert document", description = "Convert a document from one format to another")
+    @ApiResponse(responseCode = "200", description = "Conversion successful")
+    @ApiResponse(responseCode = "400", description = "Invalid request or conversion failed")
     public ResponseEntity<ConvertResponse> convertFile(
-            @RequestParam("file") MultipartFile file,
-            @RequestParam("sourceFormat") String sourceFormat,
-            @RequestParam("targetFormat") String targetFormat) {
+            @Parameter(description = "File to convert") @RequestParam("file") MultipartFile file,
+            @Parameter(description = "Source format (docx, pdf, txt, md)") @RequestParam("sourceFormat") String sourceFormat,
+            @Parameter(description = "Target format (docx, pdf, txt, md)") @RequestParam("targetFormat") String targetFormat) {
         
         logger.info("Received conversion request: {} -> {}", sourceFormat, targetFormat);
         
@@ -51,9 +61,12 @@ public class ConvertController {
     }
     
     @GetMapping("/download/{fileId}/{format}")
+    @Operation(summary = "Download converted file", description = "Download a converted file by its ID and format")
+    @ApiResponse(responseCode = "200", description = "File downloaded successfully")
+    @ApiResponse(responseCode = "404", description = "File not found")
     public ResponseEntity<Resource> downloadFile(
-            @PathVariable String fileId,
-            @PathVariable String format) {
+            @Parameter(description = "File ID") @PathVariable String fileId,
+            @Parameter(description = "File format") @PathVariable String format) {
         
         logger.info("Download request for file: {}.{}", fileId, format);
         
@@ -81,6 +94,8 @@ public class ConvertController {
     }
     
     @GetMapping("/health")
+    @Operation(summary = "Health check", description = "Check if the service is running")
+    @ApiResponse(responseCode = "200", description = "Service is healthy")
     public ResponseEntity<String> healthCheck() {
         return ResponseEntity.ok("OK");
     }

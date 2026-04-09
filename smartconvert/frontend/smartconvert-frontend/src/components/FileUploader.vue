@@ -86,6 +86,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { Upload, Document, DocumentChecked, Delete } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 
 const props = defineProps<{
   modelValue: File | null

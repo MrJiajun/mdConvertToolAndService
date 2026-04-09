@@ -54,11 +54,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { marked } from 'marked'
 import { CopyDocument } from '@element-plus/icons-vue'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/github-dark.css'
+import { ElMessage } from 'element-plus'
 
 const props = defineProps<{
   modelValue: string
